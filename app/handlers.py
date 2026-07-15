@@ -15,22 +15,7 @@ class Register(StatesGroup):
     number = State()
 
 
-@router.message(CommandStart())
-async def cmd_start(message: Message): 
-    await message.reply(f'Hello \nYour ID: {message.from_user.id}\nName: {message.from_user.first_name}', reply_markup=kb.main_keyboard)
 
-
-@router.message(Command('help'))
-async def get_help(message: Message):
-    await message.answer("This is the comand /help")
-
-@router.message(F.text =='Search')
-async def catalog(message:Message):
-    await message.answer('Chouse category:', reply_markup=kb.catalog_messages)
-
-@router.message(F.text =='Language')
-async def catalog(message:Message):
-    await message.answer('Chouse category:', reply_markup=kb.language_keyboard)
 
 ### field of regestration
 
@@ -69,4 +54,28 @@ async def t_shirt(callback: CallbackQuery):
 
 @router.message(Command('start'))
 async def catalog(message:Message):
+    await message.answer('Chouse category:', reply_markup=kb.main_keyboard)
+    
+@router.message(CommandStart())
+async def cmd_start(message: Message): 
+    await message.reply(f'Hello \nYour ID: {message.from_user.id}\nName: {message.from_user.first_name}', reply_markup=kb.main_keyboard)
+
+
+@router.message(Command('help'))
+async def get_help(message: Message):
+    await message.answer("This is the comand /help")
+
+@router.message(F.text =='Search')
+async def catalog(message:Message):
+    await message.answer('Chouse category:', reply_markup=kb.catalog_messages)
+
+
+### language menu
+
+@router.message(F.text =='Language')
+async def catalog(message:Message):
+    await message.answer('Chouse category:', reply_markup=kb.language_keyboard)
+
+@router.message(F.text =='⬅️ Menu')
+async def back_to_menu(message:Message):
     await message.answer('Chouse category:', reply_markup=kb.main_keyboard)
