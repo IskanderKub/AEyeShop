@@ -7,11 +7,17 @@ main_keyboard = ReplyKeyboardMarkup(keyboard=[
     resize_keyboard=True,
     input_field_placeholder='chose option in menu')
 
+# Button under each item
+def item_kb(item_url: str):
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text='Buy on Ebay', url=item_url)],
+    ])
 
-catalog_messages = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="result", callback_data="result")],
-    [InlineKeyboardButton(text="result2", callback_data="result2")],
-]) # catalog inline messages
+# button after search result
+after_search = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='⬅️ Menu', callback_data='return_to_menu')],
+    [InlineKeyboardButton(text='🔄 Search again', callback_data='search_again')]
+])
 
 language_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='English'), KeyboardButton(text='Russian')], 

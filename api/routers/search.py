@@ -28,13 +28,23 @@ async def search(data: SearchRequest, db: AsyncSession = Depends(get_db)): ## ta
     )
     db.add(user) ## add new user to database
 
-    history = SearchHistory( ## Save search history to database
-     user_id=data.user_id,
-     search_query=data.query
+   history = SearchHistory( ## Save search history to database
+      user_id=data.user_id,
+      search_query=data.query
     )
-    db.add(history) ## add search history to database
+   db.add(history) ## add search history to database
 
-    await db.commit() ## save all changes to database
+   await db.commit() ## save all changes to database
 
-    return {"status": "Search query saved successfully", "query": data.query} ## return message to user that search query saved successfully
+   return {
+    "status": "ok",
+    "query": data.query,
+    "items": [
+        {"title": f"{data.query} - Option 1", "price": "$100.00", "condition": "New", "url": "https://ebay.com/item1"},
+        {"title": f"{data.query} - Option 2", "price": "$85.00", "condition": "Used - Like New", "url": "https://ebay.com/item2"},
+        {"title": f"{data.query} - Option 3", "price": "$75.00", "condition": "Used - Good", "url": "https://ebay.com/item3"},
+        {"title": f"{data.query} - Option 4", "price": "$60.00", "condition": "Used", "url": "https://ebay.com/item4"},
+        {"title": f"{data.query} - Option 5", "price": "$120.00", "condition": "New", "url": "https://ebay.com/item5"},
+    ]
+   }## return message to user that search query saved successfully
 
