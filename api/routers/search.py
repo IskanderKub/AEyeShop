@@ -46,3 +46,23 @@ async def search(data: SearchRequest, db: AsyncSession = Depends(get_db)): ## ta
      "items": items
     } 
 
+@router.get("/history/{user_id}") # add endpoint to create history function
+async def get_history(user_id: int, db: AsyncSession = Depends(get_db)): # find history using user_id and pgsql
+   result = await db.execute( # send request in DB
+      select(SearchHistory) #search in search_history table (SELECT * FROM search_history;)
+      .where(SearchHistory.user_id == user_id) #filter by user_id - take request only from this user
+      .order_by(SearchHistory.created_at.desc())  #Sort by data - new requests from the top (.deck() means from new to old requests)
+      .limit(10) # 10 last requests max, to don't load whole history
+
+   )
+   history = result.scalars().all() # get all results as list
+
+   return { # return history to bot
+      "history": [
+         {
+          "query": h.search_query, #search query text
+          "date": str(h.created_at)#date of search
+          }
+         for h in history # loop through each history record
+      ]
+   }
