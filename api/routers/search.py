@@ -1,3 +1,4 @@
+from api.ebay import search_ebay
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -36,15 +37,12 @@ async def search(data: SearchRequest, db: AsyncSession = Depends(get_db)): ## ta
 
    await db.commit() ## save all changes to database
 
+
+   items = await search_ebay(data.query) # real search on eBay
+
    return {
-    "status": "ok",
-    "query": data.query,
-    "items": [
-        {"title": f"{data.query} - Option 1", "price": "$100.00", "condition": "New", "url": "https://ebay.com/item1"},
-        {"title": f"{data.query} - Option 2", "price": "$85.00", "condition": "Used - Like New", "url": "https://ebay.com/item2"},
-        {"title": f"{data.query} - Option 3", "price": "$75.00", "condition": "Used - Good", "url": "https://ebay.com/item3"},
-        {"title": f"{data.query} - Option 4", "price": "$60.00", "condition": "Used", "url": "https://ebay.com/item4"},
-        {"title": f"{data.query} - Option 5", "price": "$120.00", "condition": "New", "url": "https://ebay.com/item5"},
-    ]
-   }## return message to user that search query saved successfully
+     "status": "ok",
+     "query": data.query,
+     "items": items
+    } 
 
