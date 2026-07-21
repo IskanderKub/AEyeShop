@@ -109,21 +109,16 @@ async def search_query(message:Message):
          return
         
     for item in items: # Send each item using separate message with button
-         text = f"<b>{item['title']}</b>\n{item['price']}\n{item['condition']}"
+        text = f"<b>{item['title']}</b>\n{item['price']}\n{item['condition']}"
+        if item.get("image"): #if photo exits
+             await message.answer_photo(
+                 photo=item["image"],
+                 caption=text,
+                 parse_mode="HTML",
+                 reply_markup=kb.item_kb(item["url"])
+             )
+        else: # if photo doesn't exit, just send text
          await message.answer(text, parse_mode="HTML", reply_markup=kb.item_kb(item["url"]))
 
     await message.answer("What do you want ot do next?", reply_markup=kb.after_search) # Send navigation button in the end
-
-#search heandlers
-
-@router.callback_query(F.data == "return_to_menu") # take handler from ⬅️ Menu
-async def go_home(callback: CallbackQuery):
-    await callback.message.answer("Main menu:", reply_markup=kb.main_keyboard)#send message with mainkeyboard
-    await callback.answer()# pushing button is nessesery, otherwhise it will load endlessly
-
-@router.callback_query(F.data == "search_again")
-async def search_again(callback: CallbackQuery):
-    await callback.message.answer("Type what you are looking for:")
-    await callback.answer()
-
 

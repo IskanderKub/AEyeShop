@@ -46,6 +46,7 @@ async def search_ebay(query: str) -> list: # Search items on eBay
             "title": item.get("title", "No title"), # item title
             "price": item.get("price", {}).get("value", "N/A") + " " + item.get("price", {}).get("currency", ""), # price with currency
             "condition": item.get("condition", "N/A"), # item condition
-            "url": item.get("itemWebUrl", "https://ebay.com") # link to item on eBay
+            "url": item.get("itemWebUrl", "https://ebay.com"), # link to item on eBay
+            "image": item.get("image", {}).get("imageUrl", "")
         })
     return results # return formatted list of items to router
