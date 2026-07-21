@@ -14,10 +14,10 @@ def item_kb(item_url: str):
     ])
 
 # button after search result
-after_search = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='⬅️ Menu', callback_data='return_to_menu')],
-    [InlineKeyboardButton(text='🔄 Search again', callback_data='search_again')]
-])
+after_search = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='⬅️ Menu', callback_data='return_to_menu')],
+    [KeyboardButton(text='🔄 Search again', callback_data='search_again')]],
+    resize_keyboard=True, input_field_placeholder='menu or search again')
 
 language_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='English'), KeyboardButton(text='Russian')], 

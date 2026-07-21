@@ -68,42 +68,62 @@ async def history_menu(message:Message):
 
 
 
-### return to main menu
+### return to main menu or search again
 
 @router.message(F.text =='⬅️ Menu')
 async def back_to_menu(message:Message):
     await message.answer('Choose category:', reply_markup=kb.main_keyboard)
 
+
+@router.message(F.text == "🔄 Search again")
+async def search_again(message: Message):
+    await message.answer("Type what you are looking for:")
+
 #### Search query handler
     
-@router.message(F.text)
+@router.message(F.text & ~F.text.startswith("/")) # search everything except massages started from /
 async def search_query(message:Message):
     await message.answer("Searching for: " + message.text) # send message to user that search is in progress
 
-    # create http link with FastAPI ot send POST request on /search/ endpoint
-    # send in POST request user info and search query to save it in database
+    try: 
+        async with httpx.AsyncClient() as client:
+              response = await client.post( # start connection with FastAPI and send request
+                   f"{API_URL}/search/",
+                   json={
+                        "query": message.text,
+                        "user_id": message.from_user.id,
+                        "username": message.from_user.username,
+                        "first_name": message.from_user.first_name
+                   }
+              )
 
+        data = response.json() # read FastAPI answer in JSON
 
-    async with httpx.AsyncClient() as client:  
-        response = await client.post(f"{API_URL}/search/", json={
-            "query": message.text,
-            "user_id": message.from_user.id,
-            "username": message.from_user.username,
-            "first_name": message.from_user.first_name
-                }
-            )
-    data = response.json() # get info from FastAPI in JSON format
+    except Exception as e: # if something went wrong, catch any error, wright user message below. Bot is not crushed
+         await message.answer("something went wrong. Try again later.")
+         return
+    
+    items = data.get("items", []) # If Ebay did't found andything, say user and exit
+    if not items:
+         await message.answer("Nothing found. Try another query.")
+         return
         
-        #Send message to user that search query saved successfully and show search query
-    items = data.get("items", []) # if items is empty, return empty list
+    for item in items: # Send each item using separate message with button
+         text = f"<b>{item['title']}</b>\n{item['price']}\n{item['condition']}"
+         await message.answer(text, parse_mode="HTML", reply_markup=kb.item_kb(item["url"]))
 
-    if not items: # if nothing found, send message to user that nothing found
-            await message.answer("No items found for your search query.")
-            return
+    await message.answer("What do you want ot do next?", reply_markup=kb.after_search) # Send navigation button in the end
 
-    for item in items: # each item send with separate message with button 
-            text = f"<b>{item['title']}</b>\n{item['price']}\n{item['condition']}"
-            await message.answer(text, parse_mode="HTML", reply_markup=kb.item_kb(item["url"]))
-        
-        #After all items, send buttons to navigate
-    await message.answer("What do you want to do next?", reply_markup=kb.after_search)
+#search heandlers
+
+@router.callback_query(F.data == "return_to_menu") # take handler from ⬅️ Menu
+async def go_home(callback: CallbackQuery):
+    await callback.message.answer("Main menu:", reply_markup=kb.main_keyboard)#send message with mainkeyboard
+    await callback.answer()# pushing button is nessesery, otherwhise it will load endlessly
+
+@router.callback_query(F.data == "search_again")
+async def search_again(callback: CallbackQuery):
+    await callback.message.answer("Type what you are looking for:")
+    await callback.answer()
+
+
