@@ -36,9 +36,9 @@ async def search_comand(message:Message):
 
 ### language menu
 
-@router.message(F.text =='Language')
-async def language_menu(message:Message):
-    await message.answer('Choose language:', reply_markup=kb.language_keyboard)
+#@router.message(F.text =='Language')
+#async def language_menu(message:Message):
+#    await message.answer('Choose language:', reply_markup=kb.language_keyboard)
 
 ### History menu
 @router.message(F.text == "History")
@@ -115,10 +115,33 @@ async def search_query(message:Message):
                  photo=item["image"],
                  caption=text,
                  parse_mode="HTML",
-                 reply_markup=kb.item_kb(item["url"])
+                 reply_markup=kb.item_kb(item["url"], item["item_id"])
              )
         else: # if photo doesn't exit, just send text
          await message.answer(text, parse_mode="HTML", reply_markup=kb.item_kb(item["url"]))
 
     await message.answer("What do you want ot do next?", reply_markup=kb.after_search) # Send navigation button in the end
 
+
+###Details button
+
+@router.callback_query(F.data.startswith("details_")) #Heandler for Details button
+async def show_details(callback: CallbackQuery):
+    item_id = callback.data.split("_", 1)[1]
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{API_URL}/search/item/{item_id}")#Send GET requsert from item_id, FastAPI take answer from eBay
+
+    data = response.json() # Put answer in JSON
+
+    text = ( # fields for answer to user
+        f"<b>{data.get('title', 'N/A')}</b>\n\n"
+        f"💰 {data.get('price', 'N/A')}\n"
+        f"📍 {data.get('condition', 'N/A')}\n"
+        f"👤 Seller: {data.get('seller', 'N/A')}\n\n"
+        f"📋 {data.get('description', 'No description')}"
+    )
+
+    # Send details to user and close button loading
+    await callback.message.answer(text, parse_mode = "HTML")
+    await callback.answer()

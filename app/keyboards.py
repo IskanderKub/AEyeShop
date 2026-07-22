@@ -1,23 +1,25 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 main_keyboard = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Search')],
-    [KeyboardButton(text='History'), KeyboardButton(text='Language')]], # main menu
+    [KeyboardButton(text='🔎 Search')],
+    [KeyboardButton(text='History')]], # main menu
 
     resize_keyboard=True,
     input_field_placeholder='chose option in menu')
 
 # Button under each item
-def item_kb(item_url: str):
+def item_kb(item_url: str, item_id: str):
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text='Buy on Ebay', url=item_url)],
+        [
+    InlineKeyboardButton(text='🛒 Buy on eBay', url=item_url),
+    InlineKeyboardButton(text='📋 Details', callback_data=f"details_{item_id}") 
+        ]
     ])
 
-# button after search result
 after_search = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='⬅️ Menu', callback_data='return_to_menu')],
-    [KeyboardButton(text='🔄 Search again', callback_data='search_again')]],
-    resize_keyboard=True, input_field_placeholder='menu or search again')
+    [KeyboardButton(text='⬅️ Menu')],
+    [KeyboardButton(text='🔄 Search again')]],
+    resize_keyboard=True, input_field_placeholder='menu or search again') # After search result will be option go to mainkb or search again
 
 language_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='English'), KeyboardButton(text='Russian')], 

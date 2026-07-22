@@ -1,4 +1,4 @@
-from api.ebay import search_ebay
+from api.ebay import search_ebay, get_item_details
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -37,9 +37,11 @@ async def search(data: SearchRequest, db: AsyncSession = Depends(get_db)): ## ta
 
    await db.commit() ## save all changes to database
 
-
-   items = await search_ebay(data.query) # real search on eBay
-
+   try:
+      items = await search_ebay(data.query) # real search on eBay
+   except Exception as e:
+      print(f"eBay search error: {e}")
+      items= []
    return {
      "status": "ok",
      "query": data.query,
@@ -66,3 +68,13 @@ async def get_history(user_id: int, db: AsyncSession = Depends(get_db)): # find 
          for h in history # loop through each history record
       ]
    }
+
+   ###Details button
+
+@router.get("/item/{item_id}") # endpoint ot get item details by item_id
+async def get_item(item_id: str):
+   try:
+      details = await get_item_details(item_id)# get details from eBay
+      return details
+   except Exception as e:
+      return {"error": str(e)}

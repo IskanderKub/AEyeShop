@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Integer, String, DateTime, ForeignKey, func
+from sqlalchemy import BigInteger, Integer, Float, String, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from api.database import Base
 
@@ -18,3 +18,13 @@ class SearchHistory(Base):
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now()) ## date of creation of search history
     user: Mapped["User"] = relationship(back_populates="searches") ## create relationship with User table
 
+class PriceTracker(Base):
+    __tablename__ = "price_tracker"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) #added to track items by id
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id"))  # who is tracking
+    item_id: Mapped[str] = mapped_column(String(100))  # eBay item id
+    title: Mapped[str] = mapped_column(String(255))  # item title
+    target_price: Mapped[float] = mapped_column(Float)  # price user wants to be notified at
+    current_price: Mapped[float] = mapped_column(Float)  # current price on eBay
+    url: Mapped[str] = mapped_column(String(500))  # link to item
+    created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())

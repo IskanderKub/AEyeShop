@@ -47,6 +47,27 @@ async def search_ebay(query: str) -> list: # Search items on eBay
             "price": item.get("price", {}).get("value", "N/A") + " " + item.get("price", {}).get("currency", ""), # price with currency
             "condition": item.get("condition", "N/A"), # item condition
             "url": item.get("itemWebUrl", "https://ebay.com"), # link to item on eBay
-            "image": item.get("image", {}).get("imageUrl", "")
+            "image": item.get("image", {}).get("imageUrl", ""), #Shows images for product
+            "item_id": item.get("itemId", "") #Function for (Details) button
         })
     return results # return formatted list of items to router
+
+
+###Details Button functionality
+
+async def get_item_details(item_id: str) -> dict: # Get item details by item_id
+    token = await get_ebay_access_token() # Get access token
+    async with httpx.AsyncClient() as client:# Get request to Ebay put in item_id
+        response = await client.get(
+            f"https://api.ebay.com/buy/browse/v1/item/{item_id}", # eBay endpoint for item details
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    data = response.json() #Read answer and show user only nessesery fields
+    return {
+        "title": data.get("title", "No title"),
+        "description": data.get("shortDescription", "No description available"),
+        "price": data.get("price", {}).get("value", "N/A") + " " + data.get("price", {}).get("currency", ""),
+        "condition": data.get("condition", "N/A"),
+        "seller": data.get("seller", {}).get("username", "N/A"),
+        "url": data.get("itemWebUrl", "https://ebay.com")
+    }
