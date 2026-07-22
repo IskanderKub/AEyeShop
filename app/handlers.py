@@ -1,6 +1,8 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart, Command
 from aiogram.types import CallbackQuery, Message
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
 
 import app.keyboards as kb
 import httpx
@@ -30,7 +32,7 @@ async def get_help(message: Message):
         parse_mode="HTML"
         )
 
-@router.message(F.text =='Search')
+@router.message(F.text =='🔎 Search')
 async def search_comand(message:Message):
     await message.answer("Type what you are looking for:")
 
@@ -78,6 +80,52 @@ async def back_to_menu(message:Message):
 @router.message(F.text == "🔄 Search again")
 async def search_again(message: Message):
     await message.answer("Type what you are looking for:")
+
+
+###Track Price button
+
+class TrackPrice(StatesGroup):
+    waiting_for_price = State()
+
+@router.callback_query(F.data.startswith("track_")) # hendler activates when user pushes the button
+async def track_price(callback: CallbackQuery, state: FSMContext): # take 2 parameters: activated button and FSM - state for keeping dates between messages
+    item_id = callback.data.split("_", 1)[1] #Take item_id from callback_data "track_v1|123456" → "v1|123456".
+
+
+    #save item_id in FSM state to use later
+    await state.update_data(item_id=item_id) # Save item_id in FSM when user texted price of item we need to track it by id
+    await state.set_state(TrackPrice.waiting_for_price) #  turn bot in state of waiting price
+
+    await callback.message.answer("at what price should I notify you? (enter number)") # Ask price and and close loading button
+    await callback.answer()
+
+@router.message(TrackPrice.waiting_for_price)
+async def save_track_price(message: Message, state: FSMContext):
+
+    #get item_id form FSM state
+    data = await state.get_data()
+    item_id = data["item_id"]
+
+    #chack if user entered vaild number
+    try:
+        target_price = float(message.text)
+    except ValueError:
+        await message.answer("Please enter a vaild number. Example: 200")
+        return
+
+    # send dates in FastAPI with new endpoints /tracker/add and save note in price_tracker
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{API_URL}/tracker/add",
+            json = {
+                "user_id": message.from_user.id,
+                "item_id": item_id,
+                "target_price": target_price
+            }
+        )
+
+    await state.clear() #close FSM state
+    await message.answer(f"Done! I'll notify you when price drops below ${target_price}") # send message with price typed by user
 
 #### Search query handler
     
@@ -145,3 +193,4 @@ async def show_details(callback: CallbackQuery):
     # Send details to user and close button loading
     await callback.message.answer(text, parse_mode = "HTML")
     await callback.answer()
+

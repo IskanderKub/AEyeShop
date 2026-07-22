@@ -1,9 +1,11 @@
 from fastapi import FastAPI
-from api.routers import search
 from api.database import engine, Base
+from api.routers import search, tracker
+
 
 app = FastAPI()
 app.include_router(search.router)
+app.include_router(tracker.router)
 
 @app.on_event("startup")
 async def startup():

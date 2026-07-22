@@ -13,6 +13,9 @@ def item_kb(item_url: str, item_id: str):
         [
     InlineKeyboardButton(text='🛒 Buy on eBay', url=item_url),
     InlineKeyboardButton(text='📋 Details', callback_data=f"details_{item_id}") 
+        ],
+        [
+    InlineKeyboardButton(text='📊 Track Price', callback_data=f"track_{item_id}")
         ]
     ])
 
