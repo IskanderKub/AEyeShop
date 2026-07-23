@@ -2,7 +2,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 main_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='🔎 Search')],
-    [KeyboardButton(text='History')]], # main menu
+    [KeyboardButton(text='🏛 History')]], # main menu
 
     resize_keyboard=True,
     input_field_placeholder='chose option in menu')
@@ -31,6 +31,12 @@ language_keyboard = ReplyKeyboardMarkup(keyboard=[
     resize_keyboard=True, input_field_placeholder='chose language') # language menu
     
 
+history_actions_kb = ReplyKeyboardMarkup(keyboard=[
+    [KeyboardButton(text='🧮 Delete specific')],
+    [KeyboardButton(text='🗑 Delete All')],
+    [KeyboardButton(text='⬅️ Menu')]],
+    resize_keyboard=True,
+    input_field_placeholder='Choose action') # keyboard to delete history of requests
 
 
 get_number = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='Send number',request_contact=True)]],

@@ -34,7 +34,7 @@ async def get_help(message: Message):
         "3. Get 5 results from eBay",
         parse_mode="HTML"
         )
-
+# Comand 🔎
 @router.message(F.text =='🔎 Search')
 async def search_comand(message:Message):
     await message.answer("Type what you are looking for:")
@@ -45,8 +45,8 @@ async def search_comand(message:Message):
 #async def language_menu(message:Message):
 #    await message.answer('Choose language:', reply_markup=kb.language_keyboard)
 
-### History menu
-@router.message(F.text == "History")
+### History menu 🏛
+@router.message(F.text == "🏛 History")
 async def history_menu(message:Message):
 
     # Create link with FastAPI and send GET request on /history/ endpoint to get search history from user by id 
@@ -69,8 +69,25 @@ async def history_menu(message:Message):
     for i, item in enumerate(history, 1):
         history_text += f"{i}. {item['query']}\n" # enumerate history and add it to message with number
 
-    await message.answer(history_text, parse_mode="HTML") # send message to user with search history
+    await message.answer(history_text, parse_mode="HTML", reply_markup=kb.history_actions_kb ) # send message to user with search history
 
+
+### Delete specific 
+
+@router.message(F.text =="🧮 Delete specific")
+async def delete_specific_prompt(message: Message, state: FSMContext):
+    await state.set_state(DeleteHistory.waiting_for_number)
+    await message.answer("Enter the number of the item you want to delete:")
+
+### Delete ALL
+
+@router.message(F.text == "🗑 Delete All")
+async def delete_all_history(message:Message):
+    async with httpx.AsyncClient() as client:
+        await client.delete(f"{API_URL}/search/history/{message.from_user.id}")
+    await message.answer("History cleared", reply_markup=kb.main_keyboard)
+
+    
 
 
 ### return to main menu or search again
@@ -84,6 +101,33 @@ async def back_to_menu(message:Message):
 async def search_again(message: Message):
     await message.answer("Type what you are looking for:")
 
+# Delete History logic
+class DeleteHistory(StatesGroup):
+    waiting_for_number = State() # FSM class - state waiting number from user
+
+@router.message(DeleteHistory.waiting_for_number)
+async def delete_specific_item(message: Message, state: FSMContext): # heandler start work only after touch 🗑 Delete specific.
+
+    # try to turn user text in number, if put "abc" ask to type again
+    try:
+        number = int(message.text)
+
+    except ValueError:
+        await message.answer("Please enter a valid number:")
+        return
+
+    # send DELETE request inf FastApi - send user_id and number to find request and delete it
+    async with httpx.AsyncClient() as client:
+        response = await client.delete(
+             f"{API_URL}/search/history/{message.from_user.id}/{number}"
+        )
+
+    # read answer from FastAPI and close FSM condition
+    data = response.json()
+    await state.clear()
+
+    #show user what has been deleted and send menu keyboard
+    await message.answer(data.get("message", "Deleted."), reply_markup=kb.main_keyboard)
 
 ###Track Price logic 
 
