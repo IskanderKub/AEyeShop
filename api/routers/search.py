@@ -11,6 +11,7 @@ class SearchRequest(BaseModel):
     user_id: int
     username: str | None = None
     first_name: str = "User"
+    offset: int = 0 
 
 
 ## Search router to handle search requests and store them in the database
@@ -38,7 +39,13 @@ async def search(data: SearchRequest, db: AsyncSession = Depends(get_db)): ## ta
    await db.commit() ## save all changes to database
 
    try:
-      items = await search_ebay(data.query) # real search on eBay
+      items = await search_ebay(data.query, data.offset) # real search on eBay, and offset
+      #eBay returned 100 items by request "thinkpad"
+
+      #offset=0  → show items 1-5
+      #offset=5  → show items 6-10
+      #offset=10 → show items 11-15
+      
    except Exception as e:
       print(f"eBay search error: {e}")
       items= []

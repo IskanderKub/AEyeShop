@@ -27,7 +27,7 @@ async def get_ebay_access_token() -> str: # Get ebay access token
     print("eBay response:", data)
     return data["access_token"]
 
-async def search_ebay(query: str) -> list: # Search items on eBay
+async def search_ebay(query: str, offset: int = 0) -> list: # Search items on eBay
     token = await get_ebay_access_token() # Get the access token
     async with httpx.AsyncClient() as client: # Create link with HTTP client ebay
         response = await client.get( # GET request to eBay search endpoint
@@ -35,7 +35,8 @@ async def search_ebay(query: str) -> list: # Search items on eBay
             headers={"Authorization": f"Bearer {token}"}, # Set authorization header with access token
             params={
                 "q": query, # text from user to search in ebay
-                "limit": 5  # maximum number of items in response
+                "limit": 5,  # maximum number of items in response
+                "offset": offset
             }
         )
     data = response.json() # get response from eBay in JSON format

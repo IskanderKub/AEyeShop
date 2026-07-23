@@ -21,7 +21,7 @@ def item_kb(item_url: str, item_id: str):
 
 after_search = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='⬅️ Menu')],
-    [KeyboardButton(text='🔄 Search again')]],
+    [KeyboardButton(text='🔄 Search again'), KeyboardButton(text='➕ More results')]],
     resize_keyboard=True, input_field_placeholder='menu or search again') # After search result will be option go to mainkb or search again
 
 language_keyboard = ReplyKeyboardMarkup(keyboard=[
