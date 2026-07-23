@@ -17,7 +17,8 @@ class SearchHistory(Base):
     search_query: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now()) ## date of creation of search history
     user: Mapped["User"] = relationship(back_populates="searches") ## create relationship with User table
-
+    search_type: Mapped[str] = mapped_column(String(20), server_default="normal")
+    
 class PriceTracker(Base):
     __tablename__ = "price_tracker"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) #added to track items by id

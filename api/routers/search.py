@@ -1,4 +1,5 @@
-from api.ebay import search_ebay, get_item_details
+from api.ebay import get_item_details
+from api.ai_search import smart_search
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -12,6 +13,7 @@ class SearchRequest(BaseModel):
     username: str | None = None
     first_name: str = "User"
     offset: int = 0 
+    mode: str = "normal"
 
 
 ## Search router to handle search requests and store them in the database
@@ -23,12 +25,25 @@ async def search(data: SearchRequest, db: AsyncSession = Depends(get_db)): ## ta
    user = result.scalar_one_or_none() ## if user exist in database, return user object, else return None
 
    if not user: ## if user not exist in database, create new user
-    user = User(
-       id = data.user_id,
-       username = data.username,
-       first_name = data.first_name
-    )
-    db.add(user) ## add new user to database
+      user = User(
+         id = data.user_id,
+         username = data.username,
+         first_name = data.first_name
+      )
+      db.add(user) ## add new user to database
+
+   try:
+      if data.mode == "ai":
+         items, search_type = await smart_search(data.query, data.offset)
+      else:
+         from api.ebay import search_ebay
+         items = await search_ebay(data.query, data.offset)
+         search_type = "🔍 Normal"
+         
+   except Exception as e:
+      print(f"eBay search error: {e}")
+      items = []
+      search_type = "normal"
 
    # add skip queries to don't let buttons be in search
    SKIP_QUERIES = {"➕ More results", "🏛 History", "🗑 Delete All", "🗑 Delete specific", "🧮 Delete specific", "⬅️ Menu", "🔄 Search again", "🔎 Search"}
@@ -36,26 +51,17 @@ async def search(data: SearchRequest, db: AsyncSession = Depends(get_db)): ## ta
    if data.query not in SKIP_QUERIES:
       history = SearchHistory( ## Save search history to database
          user_id=data.user_id,
-         search_query=data.query
+         search_query=data.query,
+         search_type=search_type
       )
       db.add(history) ## add search history to database
       await db.commit() ## save all changes to database
 
-   try:
-      items = await search_ebay(data.query, data.offset) # real search on eBay, and offset
-      #eBay returned 100 items by request "thinkpad"
-
-      #offset=0  → show items 1-5
-      #offset=5  → show items 6-10
-      #offset=10 → show items 11-15
-
-   except Exception as e:
-      print(f"eBay search error: {e}")
-      items= []
    return {
      "status": "ok",
      "query": data.query,
-     "items": items
+     "items": items,
+     "search_type": search_type
     } 
 
 @router.get("/history/{user_id}") # add endpoint to create history function
@@ -73,7 +79,8 @@ async def get_history(user_id: int, db: AsyncSession = Depends(get_db)): # find 
       "history": [
          {
           "query": h.search_query, #search query text
-          "date": str(h.created_at)#date of search
+          "date": str(h.created_at), #date of search
+          "search_type": h.search_type
           }
          for h in history # loop through each history record
       ]

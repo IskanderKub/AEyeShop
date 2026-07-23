@@ -2,6 +2,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 main_keyboard = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='🔎 Search')],
+    [KeyboardButton(text='👁 AEye Search')],
     [KeyboardButton(text='🏛 History')]], # main menu
 
     resize_keyboard=True,

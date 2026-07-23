@@ -34,10 +34,17 @@ async def get_help(message: Message):
         "3. Get 5 results from eBay",
         parse_mode="HTML"
         )
-# Comand 🔎
+# Comand 🔎 Search
 @router.message(F.text =='🔎 Search')
 async def search_comand(message:Message):
+    user_search_state[message.from_user.id] = {"mode": "normal", "query": "", "offset": 0}
     await message.answer("Type what you are looking for:")
+
+# Comand 👁 AEye Search
+@router.message(F.text == "👁 AEye Search")
+async def ai_search_command(message: Message):
+    user_search_state[message.from_user.id] = {"mode": "ai", "query": "", "offset": 0}
+    await message.answer("Describe what you are looking for in natural language:")
 
 ### language menu
 
@@ -67,7 +74,8 @@ async def history_menu(message:Message):
     # Create message with search history and send it to user
     history_text = "<b>Your search history:</b>\n\n"
     for i, item in enumerate(history, 1):
-        history_text += f"{i}. {item['query']}\n" # enumerate history and add it to message with number
+        icon = "👁" if item.get("search_type") == "👁‍🗨 Aeye" else "🔍"
+        history_text += f"{i}. {icon} {item['query']}\n"
 
     await message.answer(history_text, parse_mode="HTML", reply_markup=kb.history_actions_kb ) # send message to user with search history
 
@@ -235,12 +243,15 @@ async def more_results(message:Message):
     
 @router.message(F.text & ~F.text.startswith("/")) # search everything except massages started from /
 async def search_query(message:Message):
+    user_id = message.from_user.id
+    mode = user_search_state.get(user_id, {}).get("mode", "normal")
     await message.answer("Searching for: " + message.text) # send message to user that search is in progress
 
     # save query and reset offset for this user
     user_search_state[message.from_user.id] = {
         "query": message.text,
-        "offset": 0
+        "offset": 0,
+        "mode": mode
     }
 
 
@@ -253,7 +264,8 @@ async def search_query(message:Message):
                         "query": message.text,
                         "user_id": message.from_user.id,
                         "username": message.from_user.username,
-                        "first_name": message.from_user.first_name
+                        "first_name": message.from_user.first_name,
+                        "mode": mode 
                    }
               )
 
@@ -279,8 +291,8 @@ async def search_query(message:Message):
              )
         else: # if photo doesn't exit, just send text
          await message.answer(text, parse_mode="HTML", reply_markup=kb.item_kb(item["url"]))
-
-    await message.answer("What do you want ot do next?", reply_markup=kb.after_search) # Send navigation button in the end
+    search_type = data.get("search_type", "🔍 Normal")
+    await message.answer(f"{search_type}", reply_markup=kb.after_search) # Send navigation button in the end
 
 
 ###Details logic 
